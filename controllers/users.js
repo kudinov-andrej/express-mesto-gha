@@ -1,6 +1,5 @@
 const usersModel = require('../models/user');
-const NotFoundError = require('../errors/NonFoundError');
-const ValidationError = require('../errors/ValidationError');
+
 const getUserById = (req, res) => {
   usersModel
     .findById(req.params.userId)
@@ -17,7 +16,7 @@ const getUserById = (req, res) => {
         });
         return;
       }
-      res.status(500).send({
+      res.status(400).send({
         message: 'Internal Server Error',
         err: err.message,
         stack: err.stack,
@@ -61,7 +60,7 @@ const crateUser = (req, res) => {
         message: 'Данные для создания карточки переданы не корректно',
       });
       return;
-    };
+    }
     res.status(400).send({
       message: 'Данные для создания карточки переданы не корректно',
       error: error.massege,
@@ -72,6 +71,9 @@ const crateUser = (req, res) => {
 const updateUser = (req, res) => {
   const { name, about } = req.body;
   usersModel.findByIdAndUpdate(req.user._id, { name, about }).then((user) => {
+    if (!user) {
+      throw new Error('badRequest');
+    }
     res.status(200).send({
       _id: user._id,
       avatar: user.avatar,
@@ -79,7 +81,13 @@ const updateUser = (req, res) => {
       about,
     });
   }).catch((error) => {
-    res.status(500).send({
+    if (error.massege === 'badRequest') {
+      res.status(400).send({
+        message: 'Данные для создания карточки переданы не корректно',
+      });
+      return;
+    }
+    res.status(400).send({
       massege: 'Ошибка при обработке запроса',
       error: error.massege,
       stack: error.stack,
@@ -97,7 +105,7 @@ const updateAvatar = (req, res) => {
       about: user.about,
     });
   }).catch((error) => {
-    res.status(500).send({
+    res.status(400).send({
       massege: 'Ошибка при обработке запроса',
       error: error.massege,
       stack: error.stack,
