@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const usersModel = require('../models/user');
 
 const getUserById = (req, res) => {
@@ -73,7 +74,7 @@ const updateUser = (req, res) => {
   usersModel
     .findOneAndUpdate({ id: req.user.id }, { name, about }, { new: true, runValidators: true })
     .then((user) => {
-      if (!user || !name || !about) {
+      if (!user) {
         throw new Error('badRequest');
       }
       res.status(200).send({
@@ -84,16 +85,19 @@ const updateUser = (req, res) => {
       });
     })
     .catch((error) => {
-      if (error.massege === 'badRequest') {
+      if (error instanceof mongoose.Error.ValidationError) {
         res.status(400).send({
-          message: 'Данные для создания карточки переданы не корректно',
+          message: 'В запросе переданы некорректные данные',
         });
-        return;
+      } else if (error.message === 'badRequest') {
+        res.status(400).send({
+          message: 'Пользователь не найден',
+        });
+      } else {
+        res.status(500).send({
+          message: 'Ошибка на сервере',
+        });
       }
-      res.status(400).send({
-        massege: 'Ошибка при обработке запроса',
-        error: error.massege,
-      });
     });
 };
 
