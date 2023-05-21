@@ -20,14 +20,13 @@ const createCard = (req, res) => {
     .create({
       owner: req.user._id,
       ...req.body,
-
     })
     .then((card) => {
       res.status(201).send(card);
     })
     .catch((err) => {
-      res.status(500).send({
-        message: 'Internal Server Error',
+      res.status(400).send({
+        message: 'Данные для создания карточки переданы не корректно',
         err: err.message,
         stack: err.stack,
       });
@@ -38,30 +37,27 @@ const deleteCard = (req, res) => {
   cardsModel
     .findById(req.params.cardId)
     .orFail(() => {
-      const error = new Error('Карточки не существует');
-      error.name = 'CardNotFoundError';
-      throw error;
+      throw new Error('NotFound');
     })
     .then((card) => {
       if (req.user._id.toString() === card.owner.toString()) {
         return cardsModel.findByIdAndRemove(req.params.cardId);
-        // eslint-disable-next-line no-else-return
-      } else {
-        const error = new Error('Попытка удалить чужую карточку');
-        error.name = 'UnauthorizedError';
-        throw error;
       }
     })
     .then((removedCard) => {
       if (removedCard) {
         res.send(removedCard);
       } else {
-        const error = new Error('Карточки не существует');
-        error.name = 'CardNotFoundError';
-        throw error;
+        throw new Error('NotFound');
       }
     })
     .catch((err) => {
+      if (err.message === 'NotFound') {
+        res.status(404).send({
+          message: 'Запрашиваемой карточки не существует',
+        });
+        return;
+      }
       res.status(500).send({
         message: 'Internal Server Error',
         err: err.message,

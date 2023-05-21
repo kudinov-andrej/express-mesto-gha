@@ -9,4 +9,8 @@ router.get('/:userId', userController.getUserById);
 
 router.post('/', userController.crateUser);
 
+router.patch('/me', userController.updateUser);
+
+router.patch('/me/avatar', userController.updateAvatar);
+
 module.exports = router;
