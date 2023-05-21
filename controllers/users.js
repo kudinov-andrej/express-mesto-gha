@@ -49,25 +49,14 @@ const getMi = (req, res) => {
 };
 
 const crateUser = (req, res) => {
-  usersModel.create(req.body)
-    .orFail(() => {
-      throw new Error('BedRequest');
-    })
-    .then((user) => {
-      res.status(200).send(user);
-    }).catch((error) => {
-      if (error.message === 'BedRequest') {
-        res.status(404).send({
-          message: 'Данные для создания карточки переданы не корректно',
-        });
-        return;
-      }
-      res.status(400).send({
-        massege: 'Данные для создания карточки переданы не корректно',
-        error: error.massege,
-        stack: error.stack,
-      });
+  usersModel.create(req.body).then((user) => {
+    res.status(200).send(user);
+  }).catch((error) => {
+    res.status(400).send({
+      massege: 'Данные для создания карточки переданы не корректно',
+      error: error.massege,
     });
+  });
 };
 
 const updateUser = (req, res) => {
@@ -83,7 +72,6 @@ const updateUser = (req, res) => {
     res.status(500).send({
       massege: 'Ошибка при обработке запроса',
       error: error.massege,
-      stack: error.stack,
     });
   });
 };
@@ -101,7 +89,6 @@ const updateAvatar = (req, res) => {
     res.status(500).send({
       massege: 'Ошибка при обработке запроса',
       error: error.massege,
-      stack: error.stack,
     });
   });
 };
@@ -114,7 +101,6 @@ const getUsers = async (req, res) => {
     res.status(500).send({
       message: 'Internal Server Error',
       err: err.message,
-      stack: err.stack,
     });
   }
 };
