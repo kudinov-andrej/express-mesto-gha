@@ -67,7 +67,7 @@ const deleteCard = (req, res) => {
 const likeCard = (req, res) => {
   cardsModel.findByIdAndUpdate(
     req.params.cardId,
-    { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
+    { $addToSet: { likes: req.user._id } },
     { new: true },
   ).then((card) => {
     if (!card) {
@@ -76,7 +76,7 @@ const likeCard = (req, res) => {
     res.status(200).send(card);
   }).catch((err) => {
     if (err.massege === 'NotFound') {
-      res.status(400).send({
+      res.status(404).send({
         message: 'Карточка не найдена',
       });
       return;
