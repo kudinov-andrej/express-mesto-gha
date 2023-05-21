@@ -73,7 +73,7 @@ const updateUser = (req, res) => {
   usersModel
     .findOneAndUpdate({ id: req.user.id }, { name, about }, { new: true, runValidators: true })
     .then((user) => {
-      if (!user) {
+      if (!user || !name || !about) {
         throw new Error('badRequest');
       }
       res.status(200).send({
