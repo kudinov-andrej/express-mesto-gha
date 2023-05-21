@@ -1,5 +1,11 @@
 const cardsModel = require('../models/card');
 
+function pageNotFound(req, res, next) {
+  res.status(404);
+  const error = new Error(`Page not found - ${req.originalUrl}`);
+  next(error);
+}
+
 const getCards = (req, res) => {
   cardsModel
     .find({})
@@ -37,6 +43,7 @@ const deleteCard = (req, res) => {
     .orFail(() => {
       throw new Error('NotFound');
     })
+    // eslint-disable-next-line consistent-return
     .then((card) => {
       if (req.user._id.toString() === card.owner.toString()) {
         return cardsModel.findByIdAndRemove(req.params.cardId);
@@ -51,12 +58,12 @@ const deleteCard = (req, res) => {
     })
     .catch((err) => {
       if (err.message === 'NotFound') {
-        res.status(404).send({
+        res.status(400).send({
           message: 'Запрашиваемой карточки не существует',
         });
         return;
       }
-      res.status(500).send({
+      res.status(400).send({
         message: 'Internal Server Error',
         err: err.message,
       });
@@ -80,7 +87,7 @@ const likeCard = (req, res) => {
       });
       return;
     }
-    res.status(404).send({
+    res.status(400).send({
       message: 'Internal Server Error',
       err: err.message,
     });
@@ -117,4 +124,5 @@ module.exports = {
   deleteCard,
   likeCard,
   dislikeCard,
+  pageNotFound,
 };
