@@ -57,60 +57,68 @@ const deleteCard = (req, res) => {
         });
         return;
       }
-      res.status(400).send({
+      res.status(500).send({
         message: 'Internal Server Error',
         err: err.message,
       });
     });
 };
 
-const likeCard = (req, res) => {
-  cardsModel.findByIdAndUpdate(
-    req.params.cardId,
-    { $addToSet: { likes: req.user._id } },
-    { new: true },
-  ).then((card) => {
+const likeCard = async (req, res) => {
+  try {
+    const card = await cardsModel.findByIdAndUpdate(
+      req.params.cardId,
+      { $addToSet: { likes: req.user._id } },
+      { new: true },
+    );
     if (!card) {
-      throw new Error('NotFound');
-    }
-    res.status(200).send(card);
-  }).catch((err) => {
-    if (err.massege === 'NotFound') {
       res.status(404).send({
         message: 'Карточка не найдена',
       });
       return;
     }
-    res.status(404).send({
+    res.status(200).send(card);
+  } catch (error) {
+    if (error.kind === 'ObjectId') {
+      res.status(400).send({
+        message: 'Неверный формат идентификатора карточки',
+      });
+      return;
+    }
+    res.status(500).send({
       message: 'Internal Server Error',
-      err: err.message,
+      error: error.message,
     });
-  });
+  }
 };
 
-const dislikeCard = (req, res) => {
-  cardsModel.findByIdAndUpdate(
-    req.params.cardId,
-    { $pull: { likes: req.user._id } }, // убрать _id из массива
-    { new: true },
-  ).then((card) => {
+async function dislikeCard(req, res) {
+  try {
+    const card = await cardsModel.findByIdAndUpdate(
+      req.params.cardId,
+      { $pull: { likes: req.user._id } },
+      { new: true }
+    );
     if (!card) {
-      throw new Error('NotFound');
-    }
-    res.status(200).send(card);
-  }).catch((err) => {
-    if (err.massege === 'NotFound') {
-      res.status(400).send({
+      res.status(404).send({
         message: 'Карточка не найдена',
       });
       return;
     }
-    res.status(400).send({
+    res.status(200).send(card);
+  } catch (error) {
+    if (error.kind === 'ObjectId') {
+      res.status(400).send({
+        message: 'Неверный формат идентификатора карточки',
+      });
+      return;
+    }
+    res.status(500).send({
       message: 'Internal Server Error',
-      err: err.message,
+      error: error.message,
     });
-  });
-};
+  }
+}
 
 module.exports = {
   getCards,
