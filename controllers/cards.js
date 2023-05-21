@@ -76,12 +76,12 @@ const likeCard = (req, res) => {
     res.status(200).send(card);
   }).catch((err) => {
     if (err.massege === 'NotFound') {
-      res.status(404).send({
+      res.status(400).send({
         message: 'Карточка не найдена',
       });
       return;
     }
-    res.status(400).send({
+    res.status(404).send({
       message: 'Internal Server Error',
       err: err.message,
     });
