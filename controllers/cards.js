@@ -1,11 +1,5 @@
 const cardsModel = require('../models/card');
 
-function pageNotFound(req, res, next) {
-  res.status(404);
-  const error = new Error(`Page not found - ${req.originalUrl}`);
-  next(error);
-}
-
 const getCards = (req, res) => {
   cardsModel
     .find({})
@@ -58,7 +52,7 @@ const deleteCard = (req, res) => {
     })
     .catch((err) => {
       if (err.message === 'NotFound') {
-        res.status(400).send({
+        res.status(404).send({
           message: 'Запрашиваемой карточки не существует',
         });
         return;
@@ -82,7 +76,7 @@ const likeCard = (req, res) => {
     res.status(200).send(card);
   }).catch((err) => {
     if (err.massege === 'NotFound') {
-      res.status(404).send({
+      res.status(400).send({
         message: 'Карточка не найдена',
       });
       return;
@@ -124,5 +118,4 @@ module.exports = {
   deleteCard,
   likeCard,
   dislikeCard,
-  pageNotFound,
 };
