@@ -49,14 +49,24 @@ const getMi = (req, res) => {
 };
 
 const crateUser = (req, res) => {
-  usersModel.create(req.body).then((user) => {
-    res.status(200).send(user);
-  }).catch((error) => {
-    res.status(400).send({
-      massege: 'Данные для создания карточки переданы не корректно',
-      error: error.massege,
+  usersModel.create(req.body)
+    .orFail(() => {
+      throw new Error('bedRequest');
+    })
+    .then((user) => {
+      res.status(200).send(user);
+    }).catch((error) => {
+      if (error.message === 'bedRequest') {
+        res.status(400).send({
+          message: 'Данные для создания карточки переданы не корректно',
+        });
+        return;
+      }
+      res.status(400).send({
+        message: 'Данные для создания карточки переданы не корректно',
+        error: error.message,
+      });
     });
-  });
 };
 
 const updateUser = (req, res) => {

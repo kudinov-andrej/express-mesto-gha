@@ -10,7 +10,6 @@ const getCards = (req, res) => {
       res.status(500).send({
         message: 'Internal Server Error',
         err: err.message,
-        stack: err.stack,
       });
     });
 };
@@ -28,7 +27,6 @@ const createCard = (req, res) => {
       res.status(400).send({
         message: 'Данные для создания карточки переданы не корректно',
         err: err.message,
-        stack: err.stack,
       });
     });
 };
@@ -61,7 +59,6 @@ const deleteCard = (req, res) => {
       res.status(500).send({
         message: 'Internal Server Error',
         err: err.message,
-        stack: err.stack,
       });
     });
 };
@@ -77,7 +74,6 @@ const likeCard = (req, res) => {
     res.status(500).send({
       message: 'Internal Server Error',
       err: err.message,
-      stack: err.stack,
     });
   });
 };
@@ -93,7 +89,6 @@ const dislikeCard = (req, res) => {
     res.status(500).send({
       message: 'Internal Server Error',
       err: err.message,
-      stack: err.stack,
     });
   });
 };
