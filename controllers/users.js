@@ -1,5 +1,6 @@
 const usersModel = require('../models/user');
-
+const NotFoundError = require('../errors/NonFoundError');
+const ValidationError = require('../errors/ValidationError');
 const getUserById = (req, res) => {
   usersModel
     .findById(req.params.userId)
@@ -50,28 +51,23 @@ const getMi = (req, res) => {
 
 const crateUser = (req, res) => {
   usersModel.create(req.body).then((user) => {
-    if (!user) {
-      const ERROR_CODE = 400;
-      return res.status(ERROR_CODE).send({ massege: 'Данные для создания карточки переданы не корректно' });
-    }
     res.status(200).send(user);
+    if (!user) {
+      throw new Error('badRequest');
+    }
   }).catch((error) => {
+    if (error.massege === 'badRequest') {
+      res.status(400).send({
+        message: 'Данные для создания карточки переданы не корректно',
+      });
+      return;
+    };
     res.status(400).send({
-      massege: 'Данные для создания карточки переданы не корректно',
+      message: 'Данные для создания карточки переданы не корректно',
       error: error.massege,
     });
   });
 };
-
-class NotFoundError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = 'NotFoundError';
-    this.statusCode = 404;
-  }
-}
-
-module.exports = NotFoundError;
 
 const updateUser = (req, res) => {
   const { name, about } = req.body;
