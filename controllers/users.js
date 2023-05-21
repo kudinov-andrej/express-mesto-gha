@@ -50,6 +50,10 @@ const getMi = (req, res) => {
 
 const crateUser = (req, res) => {
   usersModel.create(req.body).then((user) => {
+    if (!user) {
+      const ERROR_CODE = 400;
+      return res.status(ERROR_CODE).send({ massege: 'Данные для создания карточки переданы не корректно' });
+    }
     res.status(200).send(user);
   }).catch((error) => {
     res.status(400).send({
@@ -58,6 +62,16 @@ const crateUser = (req, res) => {
     });
   });
 };
+
+class NotFoundError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'NotFoundError';
+    this.statusCode = 404;
+  }
+}
+
+module.exports = NotFoundError;
 
 const updateUser = (req, res) => {
   const { name, about } = req.body;
