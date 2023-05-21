@@ -69,9 +69,18 @@ const likeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
     { new: true },
   ).then((card) => {
+    if (!card) {
+      throw new Error('NotFound');
+    }
     res.status(200).send(card);
   }).catch((err) => {
-    res.status(500).send({
+    if (err.massege === 'NotFound') {
+      res.status(404).send({
+        message: 'Карточка не найдена',
+      });
+      return;
+    }
+    res.status(404).send({
       message: 'Internal Server Error',
       err: err.message,
     });
@@ -84,9 +93,18 @@ const dislikeCard = (req, res) => {
     { $pull: { likes: req.user._id } }, // убрать _id из массива
     { new: true },
   ).then((card) => {
+    if (!card) {
+      throw new Error('NotFound');
+    }
     res.status(200).send(card);
   }).catch((err) => {
-    res.status(500).send({
+    if (err.massege === 'NotFound') {
+      res.status(404).send({
+        message: 'Карточка не найдена',
+      });
+      return;
+    }
+    res.status(404).send({
       message: 'Internal Server Error',
       err: err.message,
     });
