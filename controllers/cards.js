@@ -57,7 +57,7 @@ const deleteCard = (req, res) => {
         });
         return;
       }
-      res.status(500).send({
+      res.status(400).send({
         message: 'Internal Server Error',
         err: err.message,
       });

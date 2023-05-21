@@ -3,20 +3,9 @@ const mongoose = require('mongoose');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const bodyParser = require('body-parser');
 const router = require('./routes');
+const pageNotFound = require('./midlevare/pageNotFound');
 
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
-
-function pageNotFound(req, res, next) {
-  res.status(404);
-  const error = new Error('Page not found');
-  if (error.message === 'Page not found') {
-    res.status(404).send({
-      message: 'Страница не найдена',
-    });
-    return;
-  }
-  next(error);
-}
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
