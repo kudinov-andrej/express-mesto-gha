@@ -70,29 +70,31 @@ const crateUser = (req, res) => {
 
 const updateUser = (req, res) => {
   const { name, about } = req.body;
-  usersModel.findByIdAndUpdate(req.user._id, { name, about }).then((user) => {
-    if (!user) {
-      throw new Error('badRequest');
-    }
-    res.status(200).send({
-      _id: user._id,
-      avatar: user.avatar,
-      name,
-      about,
-    });
-  }).catch((error) => {
-    if (error.massege === 'badRequest') {
-      res.status(400).send({
-        message: 'Данные для создания карточки переданы не корректно',
+  usersModel
+    .findOneAndUpdate({ id: req.user.id }, { name, about }, { new: true, runValidators: true })
+    .then((user) => {
+      if (!user) {
+        throw new Error('badRequest');
+      }
+      res.status(200).send({
+        id: user.id,
+        avatar: user.avatar,
+        name,
+        about,
       });
-      return;
-    }
-    res.status(400).send({
-      massege: 'Ошибка при обработке запроса',
-      error: error.massege,
-      stack: error.stack,
+    })
+    .catch((error) => {
+      if (error.massege === 'badRequest') {
+        res.status(400).send({
+          message: 'Данные для создания карточки переданы не корректно',
+        });
+        return;
+      }
+      res.status(400).send({
+        massege: 'Ошибка при обработке запроса',
+        error: error.massege,
+      });
     });
-  });
 };
 
 const updateAvatar = (req, res) => {
