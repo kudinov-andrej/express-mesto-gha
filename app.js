@@ -4,7 +4,6 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const router = require('./routes');
 
-
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
 
 const app = express();
@@ -13,7 +12,7 @@ app.use(bodyParser.json());
 
 app.use((req, res, next) => {
   req.user = {
-    _id: new mongoose.Types.ObjectId('64665d8e43e2a5875b590ac8'),
+    _id: new mongoose.Types.ObjectId('6469c2c51e45aec90d0e6a90'),
   };
   next();
 });

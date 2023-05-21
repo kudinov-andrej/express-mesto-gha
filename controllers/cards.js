@@ -70,8 +70,42 @@ const deleteCard = (req, res) => {
     });
 };
 
+const likeCard = (req, res) => {
+  cardsModel.findByIdAndUpdate(
+    req.params.cardId,
+    { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
+    { new: true },
+  ).then((card) => {
+    res.status(200).send(card);
+  }).catch((err) => {
+    res.status(500).send({
+      message: 'Internal Server Error',
+      err: err.message,
+      stack: err.stack,
+    });
+  });
+};
+
+const dislikeCard = (req, res) => {
+  cardsModel.findByIdAndUpdate(
+    req.params.cardId,
+    { $pull: { likes: req.user._id } }, // убрать _id из массива
+    { new: true },
+  ).then((card) => {
+    res.status(200).send(card);
+  }).catch((err) => {
+    res.status(500).send({
+      message: 'Internal Server Error',
+      err: err.message,
+      stack: err.stack,
+    });
+  });
+};
+
 module.exports = {
   getCards,
   createCard,
   deleteCard,
+  likeCard,
+  dislikeCard,
 };

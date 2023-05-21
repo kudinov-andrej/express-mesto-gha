@@ -20,6 +20,27 @@ const getUserById = (req, res) => {
     });
 };
 
+const getMi = (req, res) => {
+  const { _id } = req.user;
+  usersModel
+    .findById({ _id })
+    .orFail(() => {
+      const error = new Error('Пользователь не существует');
+      error.name = 'UserNotFoundError';
+      throw error;
+    })
+    .then((user) => {
+      res.send(user);
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message: 'Internal Server Error',
+        err: err.message,
+        stack: err.stack,
+      });
+    });
+};
+
 const crateUser = (req, res) => {
   usersModel.create(req.body).then((user) => {
     res.status(200).send(user);
@@ -49,4 +70,5 @@ module.exports = {
   getUserById,
   getUsers,
   crateUser,
+  getMi,
 };
