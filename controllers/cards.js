@@ -81,7 +81,7 @@ const likeCard = (req, res) => {
       });
       return;
     }
-    res.status(404).send({
+    res.status(400).send({
       message: 'Internal Server Error',
       err: err.message,
     });
