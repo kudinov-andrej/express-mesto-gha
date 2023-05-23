@@ -5,25 +5,32 @@ const getUserById = (req, res) => {
   usersModel
     .findById(req.params.userId)
     .orFail(() => {
-      throw new Error('NotFound');
+      throw new Error('DocumentNotFoundError');
     })
     .then((user) => {
       res.send(user);
     })
     .catch((err) => {
-      if (err.message === 'NotFound') {
-        res.status(404).send({
+      if (err.message === 'DocumentNotFoundError') {
+        const ERROR_CODE = 404;
+        res.status(ERROR_CODE).send({
           message: 'Запрашиваемый пользователь не найден',
         });
-        return;
+      } else if (err instanceof mongoose.CastError) {
+        const ERROR_CODE = 400;
+        res.status(ERROR_CODE).send({
+          message: 'Данные id переданы не корректно',
+        });
+      } else {
+        res.status(500).send({
+          message: 'Internal Server Error',
+          err: err.message,
+          stack: err.stack,
+        });
       }
-      res.status(400).send({
-        message: 'Internal Server Error',
-        err: err.message,
-        stack: err.stack,
-      });
     });
 };
+
 
 const getMi = (req, res) => {
   const { _id } = req.user;
