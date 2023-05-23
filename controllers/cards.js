@@ -60,7 +60,7 @@ const deleteCard = (req, res) => {
     })
     .catch((err) => {
       if (err instanceof mongoose.CastError) {
-        const ERROR_CODE = 404;
+        const ERROR_CODE = 400;
         res.status(ERROR_CODE).send({
           message: 'Данные id карточки переданы не корректно',
         });
