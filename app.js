@@ -1,15 +1,13 @@
 const express = require('express');
 const mongoose = require('mongoose');
-// eslint-disable-next-line import/no-extraneous-dependencies
-const bodyParser = require('body-parser');
 const router = require('./routes');
 const pageNotFound = require('./midlevare/pageNotFound');
 
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
 
 const app = express();
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+
+app.use(express.json());
 
 app.use((req, res, next) => {
   req.user = {
