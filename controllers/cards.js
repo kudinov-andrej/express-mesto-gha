@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const cardsModel = require('../models/card');
 
 const getCards = (req, res) => {
@@ -24,8 +25,15 @@ const createCard = (req, res) => {
       res.status(201).send(card);
     })
     .catch((err) => {
-      res.status(400).send({
-        message: 'Данные для создания карточки переданы не корректно',
+      if (err.name === 'ValidationError') {
+        const ERROR_CODE = 400;
+        res.status(ERROR_CODE).send({
+          message: 'Данные для создания карточки переданы не корректно',
+        });
+        return;
+      }
+      res.status(500).send({
+        message: 'Internal Server Error',
         err: err.message,
       });
     });
@@ -35,7 +43,7 @@ const deleteCard = (req, res) => {
   cardsModel
     .findById(req.params.cardId)
     .orFail(() => {
-      throw new Error('NotFound');
+      throw new Error('DocumentNotFoundError');
     })
     // eslint-disable-next-line consistent-return
     .then((card) => {
@@ -47,20 +55,26 @@ const deleteCard = (req, res) => {
       if (removedCard) {
         res.send(removedCard);
       } else {
-        throw new Error('NotFound');
+        throw new Error('DocumentNotFoundError');
       }
     })
     .catch((err) => {
-      if (err.message === 'NotFound') {
-        res.status(404).send({
-          message: 'Запрашиваемой карточки не существует',
+      if (err instanceof mongoose.CastError) {
+        const ERROR_CODE = 404;
+        res.status(ERROR_CODE).send({
+          message: 'Данные id карточки переданы не корректно',
         });
-        return;
+      } else if (err.message === 'DocumentNotFoundError') {
+        const ERROR_CODE = 404;
+        res.status(ERROR_CODE).send({
+          message: 'Запрашиваемая карточка не найдена',
+        });
+      } else {
+        res.status(500).send({
+          message: 'Internal Server Error',
+          err: err.message,
+        });
       }
-      res.status(400).send({
-        message: 'Internal Server Error',
-        err: err.message,
-      });
     });
 };
 
@@ -70,53 +84,59 @@ const likeCard = async (req, res) => {
       req.params.cardId,
       { $addToSet: { likes: req.user._id } },
       { new: true },
-    );
-    if (!card) {
-      res.status(404).send({
-        message: 'Карточка не найдена',
+    )
+      .orFail(() => {
+        throw new Error('DocumentNotFoundError');
       });
-      return;
-    }
     res.status(200).send(card);
-  } catch (error) {
-    if (error.kind === 'ObjectId') {
-      res.status(400).send({
-        message: 'Неверный формат идентификатора карточки',
+  } catch (err) {
+    if (err.message === 'DocumentNotFoundError') {
+      const ERROR_CODE = 404;
+      res.status(ERROR_CODE).send({
+        message: 'Запрашиваемая карточка не найдена',
       });
-      return;
+    } else if (err instanceof mongoose.CastError) {
+      const ERROR_CODE = 400;
+      res.status(ERROR_CODE).send({
+        message: 'Данные id карточки переданы не корректно',
+      });
+    } else {
+      res.status(500).send({
+        message: 'Internal Server Error',
+        err: err.message,
+      });
     }
-    res.status(500).send({
-      message: 'Internal Server Error',
-      error: error.message,
-    });
   }
-};
+}
 
 async function dislikeCard(req, res) {
   try {
     const card = await cardsModel.findByIdAndUpdate(
       req.params.cardId,
       { $pull: { likes: req.user._id } },
-      { new: true }
-    );
-    if (!card) {
-      res.status(404).send({
-        message: 'Карточка не найдена',
+      { new: true },
+    )
+      .orFail(() => {
+        throw new Error('DocumentNotFoundError');
       });
-      return;
-    }
     res.status(200).send(card);
-  } catch (error) {
-    if (error.kind === 'ObjectId') {
-      res.status(400).send({
-        message: 'Неверный формат идентификатора карточки',
+  } catch (err) {
+    if (err.message === 'DocumentNotFoundError') {
+      const ERROR_CODE = 404;
+      res.status(ERROR_CODE).send({
+        message: 'Запрашиваемая карточка не найдена',
       });
-      return;
+    } else if (err instanceof mongoose.CastError) {
+      const ERROR_CODE = 400;
+      res.status(ERROR_CODE).send({
+        message: 'Данные id карточки переданы не корректно',
+      });
+    } else {
+      res.status(500).send({
+        message: 'Internal Server Error',
+        err: err.message,
+      });
     }
-    res.status(500).send({
-      message: 'Internal Server Error',
-      error: error.message,
-    });
   }
 }
 
