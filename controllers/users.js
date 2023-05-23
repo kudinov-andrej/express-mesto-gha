@@ -59,7 +59,6 @@ const getMi = (req, res) => {
       }
     });
 };
-
 const crateUser = (req, res) => {
   usersModel.create(req.body).then((user) => {
     res.status(200).send(user);
@@ -101,6 +100,11 @@ const updateUser = (req, res) => {
         const ERROR_CODE = 400;
         res.status(ERROR_CODE).send({
           message: 'Данные для создания карточки переданы не корректно',
+        });
+      } else if (err instanceof mongoose.CastError) {
+        const ERROR_CODE = 400;
+        res.status(ERROR_CODE).send({
+          message: 'Данные id переданы не корректно',
         });
       } else {
         res.status(500).send({
