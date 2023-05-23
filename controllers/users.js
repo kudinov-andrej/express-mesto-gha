@@ -25,53 +25,54 @@ const getUserById = (req, res) => {
         res.status(500).send({
           message: 'Internal Server Error',
           err: err.message,
-          stack: err.stack,
         });
       }
     });
 };
-
 
 const getMi = (req, res) => {
   const { _id } = req.user;
   usersModel
     .findById({ _id })
     .orFail(() => {
-      const error = new Error({
-        message: 'Запрашиваемый пользователь не найден',
-      });
-      error.name = 'UserNotFoundError';
-      error.status = 404;
-      throw error;
+      throw new Error('DocumentNotFoundError');
     })
     .then((user) => {
       res.send(user);
     })
     .catch((err) => {
-      res.status(500).send({
-        message: 'Internal Server Error',
-        err: err.message,
-        stack: err.stack,
-      });
+      if (err.message === 'DocumentNotFoundError') {
+        const ERROR_CODE = 404;
+        res.status(ERROR_CODE).send({
+          message: 'Запрашиваемый пользователь не найден',
+        });
+      } else if (err instanceof mongoose.CastError) {
+        const ERROR_CODE = 400;
+        res.status(ERROR_CODE).send({
+          message: 'Данные id переданы не корректно',
+        });
+      } else {
+        res.status(500).send({
+          message: 'Internal Server Error',
+          err: err.message,
+        });
+      }
     });
 };
 
 const crateUser = (req, res) => {
   usersModel.create(req.body).then((user) => {
     res.status(200).send(user);
-    if (!user) {
-      throw new Error('badRequest');
-    }
-  }).catch((error) => {
-    if (error.massege === 'badRequest') {
+  }).catch((err) => {
+    if (err.name === 'ValidationError') {
       res.status(400).send({
         message: 'Данные для создания карточки переданы не корректно',
       });
       return;
     }
-    res.status(400).send({
-      message: 'Данные для создания карточки переданы не корректно',
-      error: error.massege,
+    res.status(500).send({
+      message: 'Internal Server Error',
+      err: err.message,
     });
   });
 };
