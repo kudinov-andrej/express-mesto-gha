@@ -65,7 +65,8 @@ const crateUser = (req, res) => {
     res.status(200).send(user);
   }).catch((err) => {
     if (err.name === 'ValidationError') {
-      res.status(400).send({
+      const ERROR_CODE = 400;
+      res.status(ERROR_CODE).send({
         message: 'Данные для создания карточки переданы не корректно',
       });
       return;
@@ -80,10 +81,13 @@ const crateUser = (req, res) => {
 const updateUser = (req, res) => {
   const { name, about } = req.body;
   usersModel
-    .findOneAndUpdate({ id: req.user.id }, { name, about }, { new: true, runValidators: true })
+    .findOneAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
-        throw new Error('badRequest');
+        const ERROR_CODE = 404;
+        res.status(ERROR_CODE).send({
+          message: 'Запрашиваемый пользователь не найден',
+        });
       }
       res.status(200).send({
         id: user.id,
@@ -92,18 +96,16 @@ const updateUser = (req, res) => {
         about,
       });
     })
-    .catch((error) => {
-      if (error instanceof mongoose.Error.ValidationError) {
-        res.status(400).send({
-          message: 'В запросе переданы некорректные данные',
-        });
-      } else if (error.message === 'badRequest') {
-        res.status(400).send({
-          message: 'Пользователь не найден',
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        const ERROR_CODE = 400;
+        res.status(ERROR_CODE).send({
+          message: 'Данные для создания карточки переданы не корректно',
         });
       } else {
         res.status(500).send({
-          message: 'Ошибка на сервере',
+          message: 'Internal Server Error',
+          err: err.message,
         });
       }
     });
@@ -112,18 +114,30 @@ const updateUser = (req, res) => {
 const updateAvatar = (req, res) => {
   const { avatar } = req.body;
   usersModel.findByIdAndUpdate(req.user._id, { avatar }).then((user) => {
+    if (!user) {
+      const ERROR_CODE = 404;
+      res.status(ERROR_CODE).send({
+        message: 'Запрашиваемый пользователь не найден',
+      });
+    }
     res.status(200).send({
       _id: user._id,
       avatar,
       name: user.name,
       about: user.about,
     });
-  }).catch((error) => {
-    res.status(400).send({
-      massege: 'Ошибка при обработке запроса',
-      error: error.massege,
-      stack: error.stack,
-    });
+  }).catch((err) => {
+    if (err.name === 'ValidationError') {
+      const ERROR_CODE = 400;
+      res.status(ERROR_CODE).send({
+        message: 'Данные для создания карточки переданы не корректно',
+      });
+    } else {
+      res.status(500).send({
+        message: 'Internal Server Error',
+        err: err.message,
+      });
+    }
   });
 };
 
