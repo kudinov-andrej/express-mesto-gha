@@ -1,5 +1,11 @@
 const mongoose = require('mongoose');
+const http2 = require('http2');
 const usersModel = require('../models/user');
+
+const {
+  // eslint-disable-next-line max-len
+  HTTP_STATUS_OK, HTTP_STATUS_NOT_FOUND, HTTP_STATUS_BAD_REQUEST, HTTP_STATUS_INTERNAL_SERVER_ERROR,
+} = http2.constants;
 
 const getUserById = (req, res) => {
   usersModel
@@ -12,19 +18,16 @@ const getUserById = (req, res) => {
     })
     .catch((err) => {
       if (err.message === 'DocumentNotFoundError') {
-        const ERROR_CODE = 404;
-        res.status(ERROR_CODE).send({
+        res.status(HTTP_STATUS_NOT_FOUND).send({
           message: 'Запрашиваемый пользователь не найден',
         });
       } else if (err instanceof mongoose.CastError) {
-        const ERROR_CODE = 400;
-        res.status(ERROR_CODE).send({
+        res.status(HTTP_STATUS_BAD_REQUEST).send({
           message: 'Данные id переданы не корректно',
         });
       } else {
-        res.status(500).send({
+        res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
           message: 'Internal Server Error',
-          err: err.message,
         });
       }
     });
@@ -42,37 +45,33 @@ const getMi = (req, res) => {
     })
     .catch((err) => {
       if (err.message === 'DocumentNotFoundError') {
-        const ERROR_CODE = 404;
-        res.status(ERROR_CODE).send({
+        res.status(HTTP_STATUS_NOT_FOUND).send({
           message: 'Запрашиваемый пользователь не найден',
         });
       } else if (err instanceof mongoose.CastError) {
-        const ERROR_CODE = 400;
-        res.status(ERROR_CODE).send({
+        res.status(HTTP_STATUS_BAD_REQUEST).send({
           message: 'Данные id переданы не корректно',
         });
       } else {
-        res.status(500).send({
+        res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
           message: 'Internal Server Error',
-          err: err.message,
         });
       }
     });
 };
+
 const crateUser = (req, res) => {
   usersModel.create(req.body).then((user) => {
-    res.status(200).send(user);
+    res.status(HTTP_STATUS_OK).send(user);
   }).catch((err) => {
     if (err.name === 'ValidationError') {
-      const ERROR_CODE = 400;
-      res.status(ERROR_CODE).send({
+      res.status(HTTP_STATUS_BAD_REQUEST).send({
         message: 'Данные для создания карточки переданы не корректно',
       });
       return;
     }
-    res.status(500).send({
+    res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
       message: 'Internal Server Error',
-      err: err.message,
     });
   });
 };
@@ -83,12 +82,11 @@ const updateUser = (req, res) => {
     .findOneAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
-        const ERROR_CODE = 404;
-        res.status(ERROR_CODE).send({
+        res.status(HTTP_STATUS_NOT_FOUND).send({
           message: 'Запрашиваемый пользователь не найден',
         });
       }
-      res.status(200).send({
+      res.status(HTTP_STATUS_OK).send({
         id: user.id,
         avatar: user.avatar,
         name,
@@ -97,19 +95,16 @@ const updateUser = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        const ERROR_CODE = 400;
-        res.status(ERROR_CODE).send({
+        res.status(HTTP_STATUS_BAD_REQUEST).send({
           message: 'Данные для создания карточки переданы не корректно',
         });
       } else if (err instanceof mongoose.CastError) {
-        const ERROR_CODE = 400;
-        res.status(ERROR_CODE).send({
+        res.status(HTTP_STATUS_BAD_REQUEST).send({
           message: 'Данные id переданы не корректно',
         });
       } else {
-        res.status(500).send({
+        res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
           message: 'Internal Server Error',
-          err: err.message,
         });
       }
     });
@@ -119,12 +114,11 @@ const updateAvatar = (req, res) => {
   const { avatar } = req.body;
   usersModel.findByIdAndUpdate(req.user._id, { avatar }).then((user) => {
     if (!user) {
-      const ERROR_CODE = 404;
-      res.status(ERROR_CODE).send({
+      res.status(HTTP_STATUS_NOT_FOUND).send({
         message: 'Запрашиваемый пользователь не найден',
       });
     }
-    res.status(200).send({
+    res.status(HTTP_STATUS_OK).send({
       _id: user._id,
       avatar,
       name: user.name,
@@ -132,14 +126,12 @@ const updateAvatar = (req, res) => {
     });
   }).catch((err) => {
     if (err.name === 'ValidationError') {
-      const ERROR_CODE = 400;
-      res.status(ERROR_CODE).send({
+      res.status(HTTP_STATUS_BAD_REQUEST).send({
         message: 'Данные для создания карточки переданы не корректно',
       });
     } else {
-      res.status(500).send({
+      res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
         message: 'Internal Server Error',
-        err: err.message,
       });
     }
   });
@@ -150,10 +142,8 @@ const getUsers = async (req, res) => {
     const users = await usersModel.find({});
     res.send(users);
   } catch (err) {
-    res.status(500).send({
+    res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
       message: 'Internal Server Error',
-      err: err.message,
-      stack: err.stack,
     });
   }
 };
