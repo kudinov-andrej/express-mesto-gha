@@ -104,7 +104,7 @@ const likeCard = async (req, res) => {
       });
     }
   }
-}
+};
 
 async function dislikeCard(req, res) {
   try {

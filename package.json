@@ -9,16 +9,17 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
-  "author": "",
+  "author": "Kudinov A.V",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.20.2",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.27.5",
     "express": "^4.18.2",
     "mongoose": "^7.2.0"
   },
   "devDependencies": {
+    "eslint": "^8.41.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.27.5",
     "nodemon": "^2.0.22"
   }
 }

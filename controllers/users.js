@@ -3,7 +3,6 @@ const http2 = require('http2');
 const usersModel = require('../models/user');
 
 const {
-  // eslint-disable-next-line max-len
   HTTP_STATUS_OK, HTTP_STATUS_NOT_FOUND, HTTP_STATUS_BAD_REQUEST, HTTP_STATUS_INTERNAL_SERVER_ERROR,
 } = http2.constants;
 
@@ -80,9 +79,10 @@ const updateUser = (req, res) => {
   const { name, about } = req.body;
   usersModel
     .findOneAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
+    // eslint-disable-next-line consistent-return
     .then((user) => {
       if (!user) {
-        res.status(HTTP_STATUS_NOT_FOUND).send({
+        return res.status(HTTP_STATUS_NOT_FOUND).send({
           message: 'Запрашиваемый пользователь не найден',
         });
       }
@@ -97,10 +97,6 @@ const updateUser = (req, res) => {
       if (err.name === 'ValidationError') {
         res.status(HTTP_STATUS_BAD_REQUEST).send({
           message: 'Данные для создания карточки переданы не корректно',
-        });
-      } else if (err instanceof mongoose.CastError) {
-        res.status(HTTP_STATUS_BAD_REQUEST).send({
-          message: 'Данные id переданы не корректно',
         });
       } else {
         res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
