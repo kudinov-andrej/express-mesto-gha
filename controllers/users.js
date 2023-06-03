@@ -73,7 +73,7 @@ const crateUser = (req, res, next) => {
       name: user.name,
       about: user.about,
       avatar: user.avatar,
-      email: user.email
+      email: user.email,
     })).catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(HTTP_STATUS_BAD_REQUEST).send({
@@ -171,10 +171,8 @@ const login = (req, res) => {
       if (!matched) {
         return Promise.reject(new Error('Неправильные почта или пароль'));
       }
-
       const userToken = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
       res.send({ userToken });
-
     })
     .catch((err) => {
       res
