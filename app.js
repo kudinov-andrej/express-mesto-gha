@@ -15,7 +15,7 @@ app.use(express.json());
 app.use(router);
 app.use(errors());
 app.use(ErrorHandler);
-//app.use(pageNotFound);
+app.use(pageNotFound);
 
 app.listen(3000, () => {
   console.log('Приложение слушает на 3000 порту');

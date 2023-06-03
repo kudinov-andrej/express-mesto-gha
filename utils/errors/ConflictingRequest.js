@@ -11,5 +11,4 @@ class ConflictingRequest extends Error {
     this.name = 'Conflicting Request';
   }
 }
-
 module.exports = ConflictingRequest;

@@ -3,6 +3,12 @@ const http2 = require('http2');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const usersModel = require('../models/user');
+const { MongoClient } = require('mongodb');
+const BedRequest = require('../utils/errors/BedRequest'); // 400
+const ConflictingRequest = require('../utils/errors/ConflictingRequest'); // 409
+const DeletionError = require('../utils/errors/DeletionError'); // 403
+const DocumentNotFoundError = require('../utils/errors/DocumentNotFoundError'); // 404
+const Unauthorized = require('../utils/errors/Unauthorized'); // 401
 
 const {
   HTTP_STATUS_OK, HTTP_STATUS_NOT_FOUND, HTTP_STATUS_BAD_REQUEST, HTTP_STATUS_INTERNAL_SERVER_ERROR,
@@ -12,25 +18,15 @@ const getUserById = (req, res, next) => {
   usersModel
     .findById(req.params.userId)
     .orFail(() => {
-      throw new Error('DocumentNotFoundError');
+      throw new DocumentNotFoundError('Запрашиваемый  пользователь не найден');
     })
     .then((user) => {
       res.send(user);
     })
     .catch((err) => {
-      if (err.message === 'DocumentNotFoundError') {
-        res.status(HTTP_STATUS_NOT_FOUND).send({
-          message: 'Запрашиваемый пользователь не найден',
-        });
-      } else if (err instanceof mongoose.CastError) {
-        res.status(HTTP_STATUS_BAD_REQUEST).send({
-          message: 'Данные id переданы не корректно',
-        });
-      } else {
-        res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
-          message: 'Internal Server Error',
-        });
-      }
+      if (err instanceof mongoose.CastError) {
+        new BedRequest('Данные для создания пользователя переданы не корректно');
+      } else { next(err); }
     });
 };
 
@@ -38,25 +34,15 @@ const getMi = (req, res, next) => {
   usersModel
     .findById(req.user._id)
     .orFail(() => {
-      throw new Error('DocumentNotFoundError');
+      throw new DocumentNotFoundError('Запрашиваемый пользователь не найден');
     })
     .then((user) => {
       res.send(user);
     })
     .catch((err) => {
-      if (err.message === 'DocumentNotFoundError') {
-        res.status(HTTP_STATUS_NOT_FOUND).send({
-          message: 'Запрашиваемый пользователь не найден',
-        });
-      } else if (err instanceof mongoose.CastError) {
-        res.status(HTTP_STATUS_BAD_REQUEST).send({
-          message: 'Данные id переданы не корректно',
-        });
-      } else {
-        res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
-          message: 'Internal Server Error',
-        });
-      }
+      if (err instanceof mongoose.CastError) {
+        new BedRequest('Данные для создания пользователя переданы не корректно');
+      } else { next(err); }
     });
 };
 
@@ -65,25 +51,29 @@ const crateUser = (req, res, next) => {
     name, about, avatar, email, password,
   } = req.body;
   const passwordHash = bcrypt.hash(password, 10);
-  passwordHash.then((hash) => usersModel.create({
-    name, about, avatar, email, password: hash,
-  }))
+  usersModel.findOne({ email })
+    .then(existingUser => {
+      if (existingUser) {
+        throw new ConflictingRequest('Пользователь с такой почтой уже существует');
+      }
+      return passwordHash.then((hash) => usersModel.create({
+        name, about, avatar, email, password: hash,
+      }));
+    })
     .then((user) => res.status(HTTP_STATUS_OK).send({
       name: user.name,
       about: user.about,
       avatar: user.avatar,
       email: user.email,
-    })).catch((err) => {
+    }))
+    .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(HTTP_STATUS_BAD_REQUEST).send({
-          message: err.message,
-        });
-        return;
+        throw new BedRequest('Данные для создания карточки переданы не корректно');
+      } else {
+        next(err);
       }
-      res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
-        message: 'Internal Server Error',
-      });
-    });
+    })
+    .catch(next);
 };
 
 const updateUser = (req, res, next) => {
@@ -93,9 +83,7 @@ const updateUser = (req, res, next) => {
     // eslint-disable-next-line consistent-return
     .then((user) => {
       if (!user) {
-        return res.status(HTTP_STATUS_NOT_FOUND).send({
-          message: 'Запрашиваемый пользователь не найден',
-        });
+        throw new DocumentNotFoundError('Запрашиваемый пользователь не найден');
       }
       res.status(HTTP_STATUS_OK).send({
         id: user.id,
@@ -106,24 +94,19 @@ const updateUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(HTTP_STATUS_BAD_REQUEST).send({
-          message: 'Данные для создания карточки переданы не корректно',
-        });
+        throw new BedRequest('Данные для создания карточки переданы не корректно');
       } else {
-        res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
-          message: 'Internal Server Error',
-        });
+        next(err);
       }
-    });
+    })
+    .catch(next);
 };
 
 const updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
   usersModel.findByIdAndUpdate(req.user._id, { avatar }).then((user) => {
     if (!user) {
-      res.status(HTTP_STATUS_NOT_FOUND).send({
-        message: 'Запрашиваемый пользователь не найден',
-      });
+      throw new DocumentNotFoundError('Запрашиваемый пользователь не найден');
     }
     res.status(HTTP_STATUS_OK).send({
       _id: user._id,
@@ -133,15 +116,12 @@ const updateAvatar = (req, res, next) => {
     });
   }).catch((err) => {
     if (err.name === 'ValidationError') {
-      res.status(HTTP_STATUS_BAD_REQUEST).send({
-        message: 'Данные для создания карточки переданы не корректно',
-      });
+      throw new BedRequest('Данные для создания карточки переданы не корректно');
     } else {
-      res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
-        message: 'Internal Server Error',
-      });
+      next(err);
     }
-  });
+  })
+    .catch(next);
 };
 
 const getUsers = async (req, res, next) => {
@@ -149,11 +129,10 @@ const getUsers = async (req, res, next) => {
     const users = await usersModel.find({});
     res.send(users);
   } catch (err) {
-    res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
-      message: 'Internal Server Error',
-    });
-  }
+    next(err);
+  };
 };
+
 
 const login = (req, res) => {
   const { email, password } = req.body;
@@ -161,23 +140,19 @@ const login = (req, res) => {
   usersModel.findOne({ email }).select('+password')
     .then((foundUser) => {
       if (!foundUser) {
-        return Promise.reject(new Error('Неправильные почта или пароль'));
+        return Promise.reject(new Unauthorized('Неправильные почта или пароль'));
       }
       user = foundUser;
       return bcrypt.compare(password, user.password);
     })
     .then((matched) => {
       if (!matched) {
-        return Promise.reject(new Error('Неправильные почта или пароль'));
+        return Promise.reject(new Unauthorized('Неправильные почта или пароль'));
       }
       const userToken = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
       res.send({ userToken });
     })
-    .catch((err) => {
-      res
-        .status(401)
-        .send({ message: err.message });
-    });
+    .catch(next);
 };
 
 module.exports = {

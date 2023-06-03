@@ -4,7 +4,7 @@ const { HTTP_STATUS_INTERNAL_SERVER_ERROR } = http2.constants;
 
 function ErrorHandler(err, req, res, next) {
   const { statusCode = err.status || HTTP_STATUS_INTERNAL_SERVER_ERROR, message } = err;
-  res.status(err.statusCode).send({ message: err.statusCode === HTTP_STATUS_INTERNAL_SERVER_ERROR ? 'Internal Server Error' : err.message });
+  res.status(statusCode).send({ message: err.statusCode === HTTP_STATUS_INTERNAL_SERVER_ERROR ? 'Internal Server Error' : err.message });
   next();
 }
 

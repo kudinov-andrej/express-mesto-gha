@@ -8,11 +8,8 @@ const {
 } = http2.constants;
 
 const BedRequest = require('../utils/errors/BedRequest'); // 400
-const ConflictingRequest = require('../utils/errors/ConflictingRequest'); // 409
 const DeletionError = require('../utils/errors/DeletionError'); // 403
 const DocumentNotFoundError = require('../utils/errors/DocumentNotFoundError'); // 404
-const Unauthorized = require('../utils/errors/Unauthorized'); // 401
-
 
 const getCards = (req, res, next) => {
   cardsModel
@@ -77,23 +74,13 @@ const likeCard = async (req, res, next) => {
       { new: true },
     )
       .orFail(() => {
-        throw new Error('DocumentNotFoundError');
+        throw new DocumentNotFoundError('Запрашиваемая карточка не найдена');
       });
     res.status(HTTP_STATUS_OK).send(card);
   } catch (err) {
-    if (err.message === 'DocumentNotFoundError') {
-      res.status(HTTP_STATUS_NOT_FOUND).send({
-        message: 'Запрашиваемая карточка не найдена',
-      });
-    } else if (err instanceof mongoose.CastError) {
-      res.status(HTTP_STATUS_BAD_REQUEST).send({
-        message: 'Данные id карточки переданы не корректно',
-      });
-    } else {
-      res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
-        message: 'Internal Server Error',
-      });
-    }
+    if (err instanceof mongoose.CastError) {
+      new BedRequest('Данные для создания карточки переданы не корректно');
+    } else { next(err); }
   }
 };
 
@@ -105,23 +92,13 @@ const dislikeCard = async (req, res, next) => {
       { new: true },
     )
       .orFail(() => {
-        throw new Error('DocumentNotFoundError');
+        throw new DocumentNotFoundError('Запрашиваемая карточка не найдена');
       });
     res.status(HTTP_STATUS_OK).send(card);
   } catch (err) {
-    if (err.message === 'DocumentNotFoundError') {
-      res.status(HTTP_STATUS_NOT_FOUND).send({
-        message: 'Запрашиваемая карточка не найдена',
-      });
-    } else if (err instanceof mongoose.CastError) {
-      res.status(HTTP_STATUS_BAD_REQUEST).send({
-        message: 'Данные id карточки переданы не корректно',
-      });
-    } else {
-      res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
-        message: 'Internal Server Error',
-      });
-    }
+    if (err instanceof mongoose.CastError) {
+      new BedRequest('Данные для создания карточки переданы не корректно');
+    } else { next(err); }
   }
 };
 
