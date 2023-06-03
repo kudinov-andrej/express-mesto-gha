@@ -10,6 +10,7 @@ const Unauthorized = require('../utils/errors/Unauthorized'); // 401
 
 const {
   HTTP_STATUS_OK,
+  HTTP_STATUS_CREATED,
 } = http2.constants;
 
 const getUserById = (req, res, next) => {
@@ -58,7 +59,7 @@ const crateUser = (req, res, next) => {
         name, about, avatar, email, password: hash,
       }));
     })
-    .then((user) => res.status(HTTP_STATUS_OK).send({
+    .then((user) => res.status(HTTP_STATUS_CREATED).send({
       name: user.name,
       about: user.about,
       avatar: user.avatar,

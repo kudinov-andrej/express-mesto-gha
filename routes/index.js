@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const pageNotFound = require('../midlevare/pageNotFound');
 const { login, crateUser } = require('../controllers/users');
 const userRouter = require('./users');
 const cardRouter = require('./cards');
@@ -16,5 +17,7 @@ router.use(auth);
 
 router.use('/users', userRouter);
 router.use('/cards', cardRouter);
+
+router.use(pageNotFound);
 
 module.exports = router;

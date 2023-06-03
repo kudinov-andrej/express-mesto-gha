@@ -6,7 +6,6 @@ const {
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const router = require('./routes');
-const pageNotFound = require('./midlevare/pageNotFound');
 const ErrorHandler = require('./midlevare/ErrorHandler');
 
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
@@ -24,7 +23,6 @@ app.use(limiter);
 app.use(router);
 app.use(errors());
 app.use(ErrorHandler);
-app.use(pageNotFound);
 
 app.listen(3000, () => {
   // eslint-disable-next-line no-console
