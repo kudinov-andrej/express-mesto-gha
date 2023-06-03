@@ -118,10 +118,11 @@ const updateAvatar = (req, res, next) => {
     if (err.name === 'ValidationError') {
       throw new BedRequest('Данные для создания карточки переданы не корректно');
     } else {
-      next(err);
+      res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
+        message: 'Internal Server Error',
+      });
     }
-  })
-    .catch(next);
+  });
 };
 
 const getUsers = async (req, res, next) => {
@@ -129,10 +130,11 @@ const getUsers = async (req, res, next) => {
     const users = await usersModel.find({});
     res.send(users);
   } catch (err) {
-    next(err);
-  };
+    res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
+      message: 'Internal Server Error',
+    });
+  }
 };
-
 
 const login = (req, res) => {
   const { email, password } = req.body;
@@ -140,19 +142,23 @@ const login = (req, res) => {
   usersModel.findOne({ email }).select('+password')
     .then((foundUser) => {
       if (!foundUser) {
-        return Promise.reject(new Unauthorized('Неправильные почта или пароль'));
+        return Promise.reject(new Error('Неправильные почта или пароль'));
       }
       user = foundUser;
       return bcrypt.compare(password, user.password);
     })
     .then((matched) => {
       if (!matched) {
-        return Promise.reject(new Unauthorized('Неправильные почта или пароль'));
+        return Promise.reject(new Error('Неправильные почта или пароль'));
       }
       const userToken = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
       res.send({ userToken });
     })
-    .catch(next);
+    .catch((err) => {
+      res
+        .status(401)
+        .send({ message: err.message });
+    });
 };
 
 module.exports = {
