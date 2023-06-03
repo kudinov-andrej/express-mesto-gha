@@ -116,9 +116,7 @@ const updateAvatar = (req, res, next) => {
     if (err.name === 'ValidationError') {
       new BedRequest('Данные для создания карточки переданы не корректно');
     } else {
-      res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
-        message: 'Internal Server Error',
-      });
+      next(err);
     }
   });
 };
@@ -128,9 +126,7 @@ const getUsers = async (req, res, next) => {
     const users = await usersModel.find({});
     res.send(users);
   } catch (err) {
-    res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
-      message: 'Internal Server Error',
-    });
+    next(err);
   }
 };
 
@@ -140,22 +136,20 @@ const login = (req, res) => {
   usersModel.findOne({ email }).select('+password')
     .then((foundUser) => {
       if (!foundUser) {
-        return Promise.reject(new Error('Неправильные почта или пароль'));
+        return Promise.reject(new Unauthorized('Неправильные почта или пароль'));
       }
       user = foundUser;
       return bcrypt.compare(password, user.password);
     })
     .then((matched) => {
       if (!matched) {
-        return Promise.reject(new Error('Неправильные почта или пароль'));
+        return Promise.reject(new Unauthorized('Неправильные почта или пароль'));
       }
       const userToken = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
       res.send({ userToken });
     })
     .catch((err) => {
-      res
-        .status(401)
-        .send({ message: err.message });
+      next(err);
     });
 };
 
