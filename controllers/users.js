@@ -78,7 +78,7 @@ const crateUser = (req, res, next) => {
 const updateUser = (req, res, next) => {
   const { name, about } = req.body;
   usersModel
-    .findOneAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
+    .findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     // eslint-disable-next-line consistent-return
     .then((user) => {
       if (!user) {
