@@ -1,10 +1,14 @@
 const mongoose = require('mongoose');
+
 const http2 = require('http2');
+
+const { ValidationError } = mongoose.Error;
 const cardsModel = require('../models/card');
 
 const {
   // eslint-disable-next-line max-len
-  HTTP_STATUS_CREATED, HTTP_STATUS_OK, HTTP_STATUS_NOT_FOUND, HTTP_STATUS_BAD_REQUEST, HTTP_STATUS_INTERNAL_SERVER_ERROR,
+  HTTP_STATUS_CREATED,
+  HTTP_STATUS_OK,
 } = http2.constants;
 
 const BedRequest = require('../utils/errors/BedRequest'); // 400
@@ -17,7 +21,7 @@ const getCards = (req, res, next) => {
     .then((cards) => {
       res.send(cards);
     })
-    .catch(() => {
+    .catch((err) => {
       next(err);
     });
 };
@@ -33,7 +37,7 @@ const createCard = (req, res, next) => {
     })
     .catch((err) => {
       if (err instanceof ValidationError) {
-        new BedRequest('Данные для создания карточки переданы не корректно');
+        next(new BedRequest('Данные для создания карточки переданы не корректно'));
       } else { next(err); }
     });
 };
@@ -48,9 +52,8 @@ const deleteCard = (req, res, next) => {
     .then((card) => {
       if (req.user._id.toString() === card.owner.toString()) {
         return cardsModel.findByIdAndRemove(req.params.cardId);
-      } else {
-        throw new DeletionError('Нет прав для удаления карточки');
-      };
+      }
+      throw new DeletionError('Нет прав для удаления карточки');
     })
     .then((removedCard) => {
       if (removedCard) {
@@ -61,7 +64,7 @@ const deleteCard = (req, res, next) => {
     })
     .catch((err) => {
       if (err instanceof mongoose.CastError) {
-        new BedRequest('Данные для создания карточки переданы не корректно');
+        next(new BedRequest('Данные для создания карточки переданы не корректно'));
       } else { next(err); }
     });
 };
@@ -79,7 +82,7 @@ const likeCard = async (req, res, next) => {
     res.status(HTTP_STATUS_OK).send(card);
   } catch (err) {
     if (err instanceof mongoose.CastError) {
-      new BedRequest('Данные для создания карточки переданы не корректно');
+      next(new BedRequest('Данные для создания карточки переданы не корректно'));
     } else { next(err); }
   }
 };
@@ -97,7 +100,7 @@ const dislikeCard = async (req, res, next) => {
     res.status(HTTP_STATUS_OK).send(card);
   } catch (err) {
     if (err instanceof mongoose.CastError) {
-      new BedRequest('Данные для создания карточки переданы не корректно');
+      next(new BedRequest('Данные для создания карточки переданы не корректно'));
     } else { next(err); }
   }
 };

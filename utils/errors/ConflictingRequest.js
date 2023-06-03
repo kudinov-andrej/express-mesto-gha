@@ -1,7 +1,8 @@
 const http2 = require('http2');
+
 const {
   // eslint-disable-next-line max-len
-  HTTP_STATUS_CONFLICT
+  HTTP_STATUS_CONFLICT,
 } = http2.constants;
 
 class ConflictingRequest extends Error {
