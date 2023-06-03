@@ -35,9 +35,8 @@ const createCard = (req, res, next) => {
       res.status(HTTP_STATUS_CREATED).send(card);
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        next(new BedRequest('Данные для создания карточки переданы не корректно'));
-        return;
+      if (err instanceof ValidationError) {
+        new BedRequest('Данные для создания карточки переданы не корректно');
       } else { next(err); }
     });
 };
@@ -46,25 +45,26 @@ const deleteCard = (req, res, next) => {
   cardsModel
     .findById(req.params.cardId)
     .orFail(() => {
-      next(new DocumentNotFoundError('Карточка не найдена'));
+      throw new DocumentNotFoundError('Запрашиваемая карточка не найдена');
     })
     // eslint-disable-next-line consistent-return
     .then((card) => {
       if (req.user._id.toString() === card.owner.toString()) {
         return cardsModel.findByIdAndRemove(req.params.cardId);
-      }
-      next(new DeletionError('Нет прав для удаления карточки'));
+      } else {
+        throw new DeletionError('Нет прав для удаления карточки');
+      };
     })
     .then((removedCard) => {
       if (removedCard) {
         res.send(removedCard);
       } else {
-        next(new DocumentNotFoundError('Запрашиваемая карточка не найдена'));
+        throw new DocumentNotFoundError('Запрашиваемая карточка не найдена');
       }
     })
     .catch((err) => {
       if (err instanceof mongoose.CastError) {
-        next(new BedRequest('Данные для создания карточки переданы не корректно'));
+        new BedRequest('Данные для создания карточки переданы не корректно');
       } else { next(err); }
     });
 };

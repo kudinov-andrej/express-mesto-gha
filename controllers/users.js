@@ -35,9 +35,8 @@ const getUserById = (req, res, next) => {
 };
 
 const getMi = (req, res, next) => {
-  const { _id } = req.user;
   usersModel
-    .findById({ _id })
+    .findById(req.user._id)
     .orFail(() => {
       throw new Error('DocumentNotFoundError');
     })

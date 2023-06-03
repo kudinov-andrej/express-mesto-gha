@@ -8,7 +8,7 @@ const {
 
 router.get('/', userController.getUsers);
 
-router.get('/me', validationUserId, userController.getMi);
+router.get('/me', userController.getMi);
 
 router.get('/:userId', validationUserId, userController.getUserById);
 
