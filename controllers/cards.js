@@ -7,6 +7,13 @@ const {
   HTTP_STATUS_CREATED, HTTP_STATUS_OK, HTTP_STATUS_NOT_FOUND, HTTP_STATUS_BAD_REQUEST, HTTP_STATUS_INTERNAL_SERVER_ERROR,
 } = http2.constants;
 
+const BedRequest = require('../utils/errors/BedRequest'); // 400
+const ConflictingRequest = require('../utils/errors/ConflictingRequest'); // 409
+const DeletionError = require('../utils/errors/DeletionError'); // 403
+const DocumentNotFoundError = require('../utils/errors/DocumentNotFoundError'); // 404
+const Unauthorized = require('../utils/errors/Unauthorized'); // 401
+
+
 const getCards = (req, res, next) => {
   cardsModel
     .find({})
@@ -14,9 +21,7 @@ const getCards = (req, res, next) => {
       res.send(cards);
     })
     .catch(() => {
-      res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
-        message: 'Internal Server Error',
-      });
+      next(err);
     });
 };
 
@@ -31,14 +36,9 @@ const createCard = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(HTTP_STATUS_BAD_REQUEST).send({
-          message: 'Данные для создания карточки переданы не корректно',
-        });
+        next(new BedRequest('Данные для создания карточки переданы не корректно'));
         return;
-      }
-      res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
-        message: 'Internal Server Error',
-      });
+      } else { next(err); }
     });
 };
 
@@ -46,41 +46,26 @@ const deleteCard = (req, res, next) => {
   cardsModel
     .findById(req.params.cardId)
     .orFail(() => {
-      throw new Error('DocumentNotFoundError');
+      next(new DocumentNotFoundError('Карточка не найдена'));
     })
     // eslint-disable-next-line consistent-return
     .then((card) => {
       if (req.user._id.toString() === card.owner.toString()) {
         return cardsModel.findByIdAndRemove(req.params.cardId);
-      } else {
-        throw new Error('NoRights');
       }
+      next(new DeletionError('Нет прав для удаления карточки'));
     })
     .then((removedCard) => {
       if (removedCard) {
         res.send(removedCard);
       } else {
-        throw new Error('DocumentNotFoundError');
+        next(new DocumentNotFoundError('Запрашиваемая карточка не найдена'));
       }
     })
     .catch((err) => {
       if (err instanceof mongoose.CastError) {
-        res.status(HTTP_STATUS_BAD_REQUEST).send({
-          message: 'Данные id карточки переданы не корректно',
-        });
-      } else if (err.message === 'NoRights') {
-        res.status(HTTP_STATUS_NOT_FOUND).send({
-          message: 'Нет прав для удаления карточки',
-        });
-      } else if (err.message === 'DocumentNotFoundError') {
-        res.status(HTTP_STATUS_NOT_FOUND).send({
-          message: 'Запрашиваемая карточка не найдена',
-        });
-      } else {
-        res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
-          message: 'Internal Server Error',
-        });
-      }
+        next(new BedRequest('Данные для создания карточки переданы не корректно'));
+      } else { next(err); }
     });
 };
 
@@ -138,7 +123,7 @@ const dislikeCard = async (req, res, next) => {
       });
     }
   }
-}
+};
 
 module.exports = {
   getCards,

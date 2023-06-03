@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const {
-  errors
+  errors,
 } = require('celebrate');
 const router = require('./routes');
 const pageNotFound = require('./midlevare/pageNotFound');
