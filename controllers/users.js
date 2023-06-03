@@ -68,12 +68,11 @@ const crateUser = (req, res, next) => {
     }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new BedRequest('Данные для создания карточки переданы не корректно');
+        new BedRequest('Данные для создания карточки переданы не корректно');
       } else {
         next(err);
       }
     })
-    .catch(next);
 };
 
 const updateUser = (req, res, next) => {
@@ -94,12 +93,11 @@ const updateUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new BedRequest('Данные для создания карточки переданы не корректно');
+        new BedRequest('Данные для создания карточки переданы не корректно');
       } else {
         next(err);
       }
     })
-    .catch(next);
 };
 
 const updateAvatar = (req, res, next) => {
@@ -116,7 +114,7 @@ const updateAvatar = (req, res, next) => {
     });
   }).catch((err) => {
     if (err.name === 'ValidationError') {
-      throw new BedRequest('Данные для создания карточки переданы не корректно');
+      new BedRequest('Данные для создания карточки переданы не корректно');
     } else {
       res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).send({
         message: 'Internal Server Error',
